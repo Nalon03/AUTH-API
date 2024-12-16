@@ -12,9 +12,6 @@ export const initializeRoles = async () => {
     if (!role) {
       role = roleRepo.create({ name: roleName });
       await roleRepo.save(role);
-      console.log(`Default '${roleName}' role created.`);
-    } else {
-      console.log(`Default '${roleName}' role already exists.`);
-    }
+    } 
   }
 };

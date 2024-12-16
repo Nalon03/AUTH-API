@@ -6,5 +6,13 @@ declare global {
     interface Request {
       user?: JwtPayload;
     }
+    interface Request {
+      user?: {
+        id: string;
+        role: UserRole;
+        iat?: number;
+        exp?: number;
+      };
+    }
   }
 }
