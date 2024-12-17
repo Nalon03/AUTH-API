@@ -5,7 +5,7 @@ import adminRoutes from "./routes/adminRoutes";
 import { corsConfig } from "./config/cors";
 import { env } from "./config/env";
 import { initializeRoles } from "./utils/roleInitializer";
-import { authenticateToken } from "./middleware/authMiddleware";
+import { authenticateToken, authorizeAdmin } from "./middleware/authMiddleware";
 import userRoutes from "./routes/userRoutes";
 
 const app = express();
@@ -15,7 +15,7 @@ app.use(corsConfig);
 
 app.use("/api/auth", authRoutes);
 app.use("/api", userRoutes);
-app.use("/api/admin", authenticateToken, adminRoutes);
+app.use("/api/admin", authenticateToken, authorizeAdmin, adminRoutes);
 
 AppDataSource.initialize()
   .then(async () => {

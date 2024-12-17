@@ -1,15 +1,12 @@
-import * as express from "express";
-import { JwtPayload } from "../types/auth";
+import { Request } from "express";
+import { UserRole } from "./user"; // Adjust the import path as necessary
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload;
-    }
-    interface Request {
       user?: {
         id: string;
-        role: UserRole;
+        role: UserRole[]; 
         iat?: number;
         exp?: number;
       };

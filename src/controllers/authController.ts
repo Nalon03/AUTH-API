@@ -25,7 +25,6 @@ export const register = async (
 ) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    console.log(req.body);
     const user = await registerUser(firstName, lastName, email, password);
     sendResponse(res, 201, user, true);
   } catch (error) {
