@@ -6,15 +6,12 @@ import { User } from "../models/User";
 import { AppDataSource } from "../config/db";
 import { UserRole } from "../types/user";
 
-export const authenticateToken = async (
+export const authenticateUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader =
-    req.headers["authorization"] ||
-    req.headers["Authorization"] ||
-    req.headers["AUTHORIZATION"];
+  const authHeader = req.headers["Authorization"];
 
   console.log(`Raw Authorization Header: ${authHeader}`);
 
