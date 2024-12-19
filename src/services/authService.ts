@@ -21,10 +21,11 @@ export const registerUser = async (
   }
 
   const hashedPassword = await hashPassword(password);
+
   const userRole = await roleRepo.findOne({ where: { name: "user" } });
 
   if (!userRole) {
-    throw new Error("User role not found");
+    throw new Error("Role not found");
   }
 
   const user = userRepo.create({

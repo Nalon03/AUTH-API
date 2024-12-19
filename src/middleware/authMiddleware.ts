@@ -6,51 +6,33 @@ import { User } from "../models/User";
 import { AppDataSource } from "../config/db";
 import { UserRole } from "../types/user";
 
+const unauthorizedResponse = (res: Response, message: string) => {
+  return res.status(401).json({ message });
+};
+
+const forbiddenResponse = (res: Response, message: string) => {
+  return res.status(403).json({ message });
+};
+
 export const authenticateUser = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers["Authorization"];
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return unauthorizedResponse(res, "Unauthorized");
 
-  console.log(`Raw Authorization Header: ${authHeader}`);
+  const tokenPrefix = "Bearer ";
+  if (!authHeader.startsWith(tokenPrefix))
+    return unauthorizedResponse(res, "Unauthorized");
 
-  if (!authHeader) {
-    return res.status(401).json({
-      message: "Unauthorized: No authorization header",
-      details: "Authorization header is missing",
-    });
-  }
-
-  const normalizedHeader = authHeader.toString().trim();
-
-  const tokenMatch = normalizedHeader.match(/^Bearer\s+(.+)$/i);
-
-  if (!tokenMatch) {
-    return res.status(401).json({
-      message: "Unauthorized: Invalid authorization header format",
-      details: "Header must start with 'Bearer ' followed by token",
-    });
-  }
-
-  const token = tokenMatch[1].trim();
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Unauthorized: Token is empty",
-      details: "No token provided after 'Bearer '",
-    });
-  }
+  const token = authHeader.slice(tokenPrefix.length).trim();
+  if (!token) return unauthorizedResponse(res, "Unauthorized");
 
   try {
     const decoded = verifyToken(token, env.JWT_ACCESS_SECRET) as JwtPayload;
-
-    if (!decoded || !decoded.id) {
-      return res.status(401).json({
-        message: "Unauthorized: Invalid token payload",
-        details: "Token is missing required information",
-      });
-    }
+    if (!decoded || !decoded.id)
+      return unauthorizedResponse(res, "Unauthorized");
 
     const userRepo = AppDataSource.getRepository(User);
     const user = await userRepo.findOne({
@@ -58,12 +40,7 @@ export const authenticateUser = async (
       relations: ["roles"],
     });
 
-    if (!user) {
-      return res.status(401).json({
-        message: "Unauthorized: User not found",
-        details: `No user exists with ID ${decoded.id}`,
-      });
-    }
+    if (!user) return unauthorizedResponse(res, "User not found");
 
     req.user = {
       id: user.id,
@@ -81,41 +58,26 @@ export const authenticateUser = async (
     });
 
     if (error instanceof Error) {
-      if (error.name === "TokenExpiredError") {
-        return res.status(401).json({
-          message: "Token expired",
-          details: "The provided token has expired",
-        });
-      } else if (error.name === "JsonWebTokenError") {
-        return res.status(401).json({
-          message: "Invalid token",
-          details: "The token could not be verified",
-        });
+      switch (error.name) {
+        case "TokenExpiredError":
+          return unauthorizedResponse(res, "Token expired");
+        case "JsonWebTokenError":
+          return unauthorizedResponse(res, "Invalid token");
+        default:
+          return forbiddenResponse(res, "Authentication error");
       }
-
-      return res.status(403).json({
-        message: "Authentication error",
-        details: error.message,
-      });
-    } else {
-      return res.status(403).json({
-        message: "Unexpected authentication error",
-        details: "An unknown error occurred during authentication",
-      });
     }
+
+    return forbiddenResponse(res, "Unexpected authentication error");
   }
 };
 
 export const authorizeRole = (roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(403).json({ message: "Forbidden - No user found" });
-    }
+    if (!req.user) return forbiddenResponse(res, "Forbidden - No user found");
 
     if (!req.user.role.some((roleName) => roles.includes(roleName))) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden - Insufficient permissions" });
+      return forbiddenResponse(res, "Forbidden - Insufficient permissions");
     }
 
     next();
@@ -128,8 +90,9 @@ export const authorizeAdmin = (
   next: NextFunction
 ) => {
   if (!req.user || !req.user.role.includes("admin")) {
-    return res.status(403).json({ message: "Forbidden - Admins only" });
+    return forbiddenResponse(res, "Forbidden - Admins only");
   }
+
   next();
 };
 
