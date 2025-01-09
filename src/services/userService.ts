@@ -1,10 +1,12 @@
+import { In } from "typeorm";
 import { AppDataSource } from "../config/db";
 import { User } from "../models/User";
 import { Role } from "../models/Role";
+import { UserRole } from "../types/user";
 
 export const changeUserRole = async (
   userId: string,
-  newRoles: Role[]
+  newRoles: UserRole[]
 ): Promise<User> => {
   const userRepo = AppDataSource.getRepository(User);
   const roleRepo = AppDataSource.getRepository(Role);
@@ -16,17 +18,15 @@ export const changeUserRole = async (
 
   if (!user) throw new Error("User not found");
 
-  const rolesToAssign: Role[] = await Promise.all(
-    newRoles.map(async ({ name }) => {
-      const role = await roleRepo.findOne({ where: { name: name } });
-      if (!role) {
-        throw new Error(`Role not found for name: ${name}`);
-      }
-      return role;
-    })
-  );
+  const validRoles: UserRole[] = ["user", "admin"];
+  if (!newRoles.every((roleName) => validRoles.includes(roleName))) {
+    throw new Error("Invalid role name provided");
+  }
+
+  const rolesToAssign = await roleRepo.findBy({ name: In(newRoles) });
 
   user.roles = rolesToAssign;
+  console.log("Roles to assign:", rolesToAssign);
 
   return await userRepo.save(user);
 };

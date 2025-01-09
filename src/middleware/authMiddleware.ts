@@ -5,6 +5,7 @@ import { JwtPayload } from "../types/auth";
 import { User } from "../models/User";
 import { AppDataSource } from "../config/db";
 import { UserRole } from "../types/user";
+import { AuthenticatedRequest } from "@/types/common";
 
 const unauthorizedResponse = (res: Response, message: string) => {
   return res.status(401).json({ message });
@@ -15,11 +16,11 @@ const forbiddenResponse = (res: Response, message: string) => {
 };
 
 export const authenticateUser = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers["authorization"];
+  const authHeader = req.get("authorization");
   if (!authHeader) return unauthorizedResponse(res, "Unauthorized");
 
   const tokenPrefix = "Bearer ";
@@ -73,7 +74,11 @@ export const authenticateUser = async (
 };
 
 export const authorizeRole = (roles: string[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
     if (!req.user) return forbiddenResponse(res, "Forbidden - No user found");
 
     if (!req.user.role.some((roleName) => roles.includes(roleName))) {
@@ -85,7 +90,7 @@ export const authorizeRole = (roles: string[]) => {
 };
 
 export const authorizeAdmin = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {

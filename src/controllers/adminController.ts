@@ -2,7 +2,13 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../config/db";
 import { User } from "../models/User";
 import { changeUserRole } from "../services/userService";
-import { ApiResponse } from "../types/common";
+import {
+  ApiResponse,
+  AuthenticatedRequest,
+  UpdateUserRoleBody,
+  ParamsWithUserId,
+} from "../types/common";
+import { Role } from "../models/Role";
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -19,7 +25,10 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUserRole = async (req: Request, res: Response) => {
+export const updateUserRole = async (
+  req: AuthenticatedRequest & { body: UpdateUserRoleBody },
+  res: Response
+) => {
   try {
     const { userId, newRoles } = req.body;
 
@@ -59,7 +68,10 @@ export const updateUserRole = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const userRepo = AppDataSource.getRepository(User);
@@ -90,7 +102,10 @@ export const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (
+  req: AuthenticatedRequest & { params: ParamsWithUserId },
+  res: Response
+) => {
   try {
     const { userId } = req.params;
 
@@ -122,5 +137,15 @@ export const deleteUser = async (req: Request, res: Response) => {
         error instanceof Error ? error.message : "Unknown error occurred",
     };
     res.status(500).json(errorResponse);
+  }
+};
+
+export const getAllRoles = async (req: Request, res: Response) => {
+  try {
+    const roleRepo = AppDataSource.getRepository(Role);
+    const roles = await roleRepo.find();
+    res.json({ success: true, data: roles });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch roles" });
   }
 };

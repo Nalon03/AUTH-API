@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { ApiResponse, CustomError } from "../types/common";
+import {
+  ApiResponse,
+  AuthenticatedRequest,
+  CustomError,
+  UpdateUserProfileRequest,
+} from "../types/common";
 import { AppDataSource } from "../config/db";
 import { User } from "../models/User";
 
@@ -10,7 +15,10 @@ const handleError = (res: Response, error: any) => {
     .json({ success: false, message: err.message || "An error occurred" });
 };
 
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getUserProfile = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -48,7 +56,10 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUserProfile = async (req: Request, res: Response) => {
+export const updateUserProfile = async (
+  req: UpdateUserProfileRequest,
+  res: Response
+) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
