@@ -8,19 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.comparePassword = exports.hashPassword = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const hashPassword = (password) => __awaiter(void 0, void 0, void 0, function* () {
-    const salt = yield bcrypt_1.default.genSalt(10);
-    return bcrypt_1.default.hash(password, salt);
+exports.initializeRoles = void 0;
+const db_1 = require("../config/db");
+const Role_1 = require("../models/Role");
+const initializeRoles = () => __awaiter(void 0, void 0, void 0, function* () {
+    const roleRepo = db_1.AppDataSource.getRepository(Role_1.Role);
+    const defaultRoles = ["user", "admin"];
+    for (const roleName of defaultRoles) {
+        let role = yield roleRepo.findOne({ where: { name: roleName } });
+        if (!role) {
+            role = roleRepo.create({ name: roleName });
+            yield roleRepo.save(role);
+        }
+    }
 });
-exports.hashPassword = hashPassword;
-const comparePassword = (password, hash) => __awaiter(void 0, void 0, void 0, function* () {
-    return bcrypt_1.default.compare(password, hash);
-});
-exports.comparePassword = comparePassword;
-//# sourceMappingURL=hashUtils.js.map
+exports.initializeRoles = initializeRoles;
+//# sourceMappingURL=roleInitializer.js.map
