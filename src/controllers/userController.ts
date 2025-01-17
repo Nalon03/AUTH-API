@@ -1,17 +1,12 @@
 import { Request, Response } from "express";
-import { changeUserRole } from "../services/userService";
-import { ApiResponse, CustomError } from "../types/common";
+import {
+  ApiResponse,
+  AuthenticatedRequest,
+  CustomError,
+  UpdateUserProfileRequest,
+} from "../types/common";
 import { AppDataSource } from "../config/db";
 import { User } from "../models/User";
-
-const sendResponse = (
-  res: Response,
-  statusCode: number,
-  data: any,
-  success: boolean
-) => {
-  res.status(statusCode).json({ success, data });
-};
 
 const handleError = (res: Response, error: any) => {
   const err = error as CustomError;
@@ -20,17 +15,10 @@ const handleError = (res: Response, error: any) => {
     .json({ success: false, message: err.message || "An error occurred" });
 };
 
-export const updateUserRole = async (req: Request, res: Response) => {
-  try {
-    const { userId, newRoles } = req.body;
-    const updatedUser = await changeUserRole(userId, newRoles);
-    sendResponse(res, 200, updatedUser, true);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
-
-export const getUserProfile = async (req: Request, res: Response) => {
+export const getUserProfile = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -68,7 +56,10 @@ export const getUserProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUserProfile = async (req: Request, res: Response) => {
+export const updateUserProfile = async (
+  req: UpdateUserProfileRequest,
+  res: Response
+) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -102,11 +93,6 @@ export const updateUserProfile = async (req: Request, res: Response) => {
       data: updatedUser,
     } as ApiResponse<User>);
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
-      success: false,
-      message:
-        error instanceof Error ? error.message : "Unknown error occurred",
-    };
-    res.status(500).json(errorResponse);
+    handleError(res, error);
   }
 };

@@ -1,5 +1,4 @@
 import { User, UserRole } from "./user";
-
 export interface RegisterInput {
   firstName: string;
   lastName: string;
@@ -21,7 +20,7 @@ export interface AuthTokens {
 
 export interface JwtPayload {
   id: string;
-  role: UserRole;
+  role: UserRole[];
   iat?: number;
   exp?: number;
 }

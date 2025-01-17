@@ -1,8 +1,7 @@
-import express from "express";
-import { updateUserRole } from "../controllers/adminController";
-import { authenticateToken, isAdmin } from "../middleware/authMiddleware";
+import { deleteUser, getAllRoles, updateUserRole } from "../controllers/adminController";
 import router from "./authRoutes";
 
-router.put("/update-role", authenticateToken, isAdmin, updateUserRole);
-
+router.get("/all/roles", getAllRoles);
+router.put("/update/user/role", updateUserRole);
+router.delete("/users/:userId", deleteUser);
 export default router;

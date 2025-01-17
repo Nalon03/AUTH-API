@@ -3,7 +3,6 @@ import { UserRole } from "../types/user";
 
 @Entity()
 export class Role {
-  [x: string]: any;
   @PrimaryGeneratedColumn()
   id!: number;
 
